@@ -16,7 +16,6 @@ import Comments from './screens/Comments';
 import CustomDrawer from './compoments/CustomDrawer';
 import MessegeRoom from './screens/MessegeRoom';
 import Notification from './screens/Notification';
-import CreatePost from './screens/CreatePost';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -80,7 +79,6 @@ export default function App() {
         <Stack.Screen name='CustomDrawer' component={CustomDrawer} />
         <Stack.Screen name='MessegeRoom' component={MessegeRoom} />
         <Stack.Screen name='Notification' component={Notification} />
-        <Stack.Screen name='CreatePost' component={CreatePost} />
       </Stack.Navigator>
     </NavigationContainer>
   );
