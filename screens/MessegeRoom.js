@@ -1,16 +1,15 @@
-import { View, Text, ActivityIndicator, FlatList, TouchableOpacity, Image, TextInput, Keyboard } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import { View, Text, ActivityIndicator, FlatList, TouchableOpacity, Image, TextInput, Keyboard, AppState, BackHandler } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createMessegeRoom, handlerMessege } from '../api/Api_Firebase';
+import { createMessegeRoom, handlerMessege, handlerUpdateMemberOnline } from '../api/Api_Firebase';
 import { getDataListMesseges } from '../api/Api_Firebase';
 import { formatTimestamp } from '../function/helper_function';
-import { Dimensions } from 'react-native';
 
 export default function MessegeRoom() {
+    const currentState = useRef(AppState.currentState);
     const route = useRoute();
     const navigation = useNavigation();
     const [input, setInput] = useState('');
@@ -19,9 +18,46 @@ export default function MessegeRoom() {
     const Selectuid = route.params.Selectuid;
 
     useEffect(() => {
+        const subscription = AppState.addEventListener("change", changedState => {
+          currentState.current = changedState;
+          if(currentState.current == 'active')
+          {
+            handlerUpdateMemberOnline(route.params.roomid || createChatRoomId(uid, Selectuid), uid, 'active');
+            console.log('User in room now');
+          }
+          else
+          {
+            handlerUpdateMemberOnline(route.params.roomid || createChatRoomId(uid, Selectuid), uid, 'background');
+            console.log('User not in room');
+          }
+        });
+    
+        return () => {
+          subscription.remove();
+        };
+    }, []);
+
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction,
+          );
+      
+          return () => backHandler.remove();
+    }, []);
+
+    useEffect(() => {
         createMessegeRoom(route.params.roomid || createChatRoomId(uid, Selectuid), uid, Selectuid);
         getDataListMesseges(setDatas, route.params.roomid || createChatRoomId(uid, Selectuid));
+        handlerUpdateMemberOnline(route.params.roomid || createChatRoomId(uid, Selectuid), uid, 'active');
     }, []);
+
+    const backAction = () => {
+        handlerUpdateMemberOnline(route.params.roomid || createChatRoomId(uid, Selectuid), uid, 'background');
+        console.log('User not in room');
+        navigation.goBack();
+        return true;
+    };
 
     function createChatRoomId(currentUser, partnerUser) {
         // Sắp xếp user IDs theo thứ tự bảng chữ cái

@@ -1,5 +1,5 @@
-import { View, Image, StyleSheet, TouchableOpacity, Text, Alert, FlatList, Modal, TextInput, ActivityIndicator } from 'react-native';
-import { useEffect, useState, React } from 'react';
+import { View, Image, StyleSheet, TouchableOpacity, Text, Alert, FlatList, Modal, TextInput, ActivityIndicator, AppState } from 'react-native';
+import { useEffect, useState, useRef, React } from 'react';
 import Newfeeds from '../compoments/Newfeeds';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -10,8 +10,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { BlurView } from 'expo-blur';
 import PickerImages from '../compoments/PickerImages'
+import { handlerOnline } from '../api/Api_Firebase';
 
 export default function Home() {
+  const currentState = useRef(AppState.currentState);
   const [refresh, setRefresh] = useState(false);
   const [datas, setDatas] = useState([]);
   const [friendDatas, setFriendDatas] = useState([]);
@@ -35,6 +37,14 @@ export default function Home() {
   const [childIsVisible, setChildIsVisible] = useState(false);
   const [images, setImages] = useState([]);
   const [feeling, setFelling] = useState('');
+
+  const handerAppState = async() => {
+    AppState.addEventListener("change", changedState => {
+      currentState.current = changedState;
+      handlerOnline(currentState.current);
+      console.log(currentState.current);
+    });
+  }
 
   const removeItem = (item) => {
     const updatedItems = images.filter((i) => i !== item);
@@ -227,6 +237,18 @@ export default function Home() {
     getDataNewFeeds(setDatas);
     getDataFriendlist(setFriendDatas, uid);
     getDataNotification(setNotification, setNotificationLength, uid);
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", changedState => {
+      currentState.current = changedState;
+      handlerOnline(currentState.current);
+      console.log(currentState.current);
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const renderItem = (data) => (

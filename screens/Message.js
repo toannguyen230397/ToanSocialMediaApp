@@ -1,13 +1,15 @@
-import { View, Text, ActivityIndicator, FlatList, TouchableOpacity, Image } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import { View, Text, ActivityIndicator, FlatList, TouchableOpacity, Image, AppState } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
 import AppBar from '../compoments/Appbar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
 import { getDataLastMesseges } from '../api/Api_Firebase';
 import { formatTimestamp } from '../function/helper_function';
+import { handlerOnline } from '../api/Api_Firebase';
 
 export default function Message() {
+  const currentState = useRef(AppState.currentState);
   const route = useRoute();
   const navigation = useNavigation();
   const UserData = route.params.userdata;
@@ -22,6 +24,19 @@ export default function Message() {
   useEffect(() => {
     getDataLastMesseges(setDatas, uid, setLoading);
   }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", changedState => {
+      currentState.current = changedState;
+      handlerOnline(currentState.current);
+      console.log(currentState.current);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   const renderMesseges = (data) => {
     const Selectuid = data.item.uid;
     const Selectavatar = data.item.avatar;

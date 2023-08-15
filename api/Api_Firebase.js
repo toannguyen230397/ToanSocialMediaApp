@@ -402,6 +402,7 @@ export const createMessegeRoom = async (roomid, uid, Selectuid) => {
       await setDoc(roomDocRef, {
         roomid: roomid,
         members: [uid, Selectuid],
+        online: [uid],
         lastmesseges: {},
         messeges: [],
       });
@@ -797,5 +798,26 @@ export const handlerOnline = async (state) => {
     });
 
     state == 'active' ? console.log("User is online now!") : console.log("User is offline now!");
+  }
+}
+
+/* Api này dùng để cập nhật những thành viên nào đang có mặt trong phòng chat*/
+export const handlerUpdateMemberOnline = async (roomid, uid, state) => {
+  const docRef = doc(firestore, "Messege", roomid);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    if(state == 'active')
+    {
+      await updateDoc(docRef, {
+        online: arrayUnion(uid)
+      });
+    }
+    else
+    {
+      await updateDoc(docRef, {
+        online: arrayRemove(uid)
+      });
+    }
+    console.log("Upload member online of chat room successfully!");
   }
 }

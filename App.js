@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, AppState } from 'react-native';
-import React, { useRef, useState, useEffect } from 'react';
+import { StyleSheet, Text, View, Image } from 'react-native';
+import React, { useEffect } from 'react';
 import Login from './screens/Login';
 import Register from './screens/Register';
 import Home from './screens/Home';
@@ -21,23 +21,12 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { handlerOnline } from './api/Api_Firebase';
 
 export default function App() {
-  const currentState = useRef(AppState.currentState);
   const Stack = createNativeStackNavigator();
   const Drawer = createDrawerNavigator();
 
-  const handerAppState = async() => {
-  AppState.addEventListener("change", changedState => {
-    currentState.current = changedState;
-    handlerOnline(currentState.current);
-    console.log(currentState.current);
-  });
-  }
-
   useEffect(() => {
-    handerAppState();
     AsyncStorage.clear();
   }, []);
 
