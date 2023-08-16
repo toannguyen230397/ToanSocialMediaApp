@@ -1,4 +1,4 @@
-import { View, Text, Image, TextInput, TouchableOpacity, BackHandler, Alert, ActivityIndicator, Keyboard} from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, Alert, ActivityIndicator, Keyboard} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, {useState, useEffect} from 'react';
 import styles from '../styles/LoginsStyles';
@@ -20,22 +20,6 @@ export default function Login() {
       Firebase_Login(email, password, navigation, Alert, setLoading, setEmail, setPassword);
       Keyboard.dismiss();
     }
-
-    useEffect(() => {
-      BackHandler.addEventListener("hardwareBackPress", backAction);
-    }, []);
-
-    const backAction = () => {
-      Alert.alert("Khoan!", "Bạn muốn thoát khỏi app không?", [
-        {
-          text: "Cancel",
-          onPress: () => null,
-          style: "cancel"
-        },
-        { text: "YES", onPress: () => BackHandler.exitApp() }
-      ]);
-      return true;
-    };
     
   return (
     <SafeAreaView style={{flex: 1}}>
