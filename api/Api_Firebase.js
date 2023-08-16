@@ -414,14 +414,14 @@ export const createMessegeRoom = async (roomid, uid, Selectuid) => {
 };
 
 /* Api này dùng để gửi tin nhắn*/
-export const handlerMessege = async (roomid, uid, messege, type) => {
+export const handlerMessege = async (roomid, uid, messege, type, readed) => {
   const docRef = doc(firestore, "Messege", roomid);
   const timestamp = Date.now();
   await updateDoc(docRef, {
-    messeges: arrayUnion({ uid: uid, messege: messege, posttime: timestamp, type: type })
+    messeges: arrayUnion({ uid: uid, messege: messege, posttime: timestamp, type: type, readed: readed })
   });
   await updateDoc(docRef, {
-    lastmesseges: { uid: uid, messege: messege, posttime: timestamp, type: type },
+    lastmesseges: { uid: uid, messege: messege, posttime: timestamp, type: type, readed: readed },
   });
   console.log("Upload messege successfully!");
 }
@@ -439,6 +439,8 @@ export const getDataLastMesseges = async (setDatas, uid, setLoading) => {
       querySnapshot.docs.map(async (doc) => {
         const data = doc.data();
         const filteredMembers = data.members.filter((item) => item !== uid);
+        const filteredReaded = data.messeges.filter((messege) => !messege.readed.includes(uid));
+        data.notRead = filteredReaded.length;
         const filteruid = filteredMembers[0];
         const q2 = query(
           collection(firestore, "Users"),
@@ -465,21 +467,21 @@ export const getDataLastMesseges = async (setDatas, uid, setLoading) => {
 };
 
 /* Api này dùng để lấy dữ liệu realtime của messeges*/
-export const getDataListMesseges = async (setDatas, roomid) => {
+export const getDataListMesseges = async (setDatas, setMembersOnline, roomid) => {
   const q = query(
     collection(firestore, "Messege"),
     where("roomid", "==", roomid)
   );
 
   onSnapshot(q, (querySnapshot) => {
-    const newdata = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      const membersOnline = data.online || [];
       const messeges = data.messeges || [];
-      newdata.push(...messeges);
+      messeges.reverse();
+      setDatas(messeges);
+      setMembersOnline(membersOnline);
     });
-    newdata.reverse();
-    setDatas(newdata);
   });
 };
 
@@ -819,5 +821,31 @@ export const handlerUpdateMemberOnline = async (roomid, uid, state) => {
       });
     }
     console.log("Upload member online of chat room successfully!");
+  }
+}
+
+/* Api này dùng để cập nhật đã xem tin nhắn*/
+export const handlerReadMessege = async (roomid, uid) => {
+  const docRef = doc(firestore, "Messege", roomid);
+  const docSnapshot = await getDoc(docRef);
+
+  if (docSnapshot.exists()) {
+    const messeges = docSnapshot.data().messeges; 
+
+    const updatedMesseges = messeges.map((messege) => {
+      if (!messege.readed) {
+        messege.readed = [];
+      }
+      if (!messege.readed.includes(uid)) {
+        messege.readed.push(uid);
+      }
+      return messege;
+    });
+
+    await updateDoc(docRef, { messeges: updatedMesseges });
+
+    console.log("Message is marked as read for user:", uid);
+  } else {
+    console.log('User document does not exist');
   }
 }

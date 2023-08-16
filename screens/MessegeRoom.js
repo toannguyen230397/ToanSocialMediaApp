@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { createMessegeRoom, handlerMessege, handlerUpdateMemberOnline } from '../api/Api_Firebase';
+import { createMessegeRoom, handlerMessege, handlerUpdateMemberOnline, handlerReadMessege } from '../api/Api_Firebase';
 import { getDataListMesseges } from '../api/Api_Firebase';
 import { formatTimestamp } from '../function/helper_function';
 
@@ -14,6 +14,7 @@ export default function MessegeRoom() {
     const navigation = useNavigation();
     const [input, setInput] = useState('');
     const [datas, setDatas] = useState([]);
+    const [membersOnline, setMembersOnline] = useState([]);
     const uid = route.params.uid;
     const Selectuid = route.params.Selectuid;
 
@@ -48,8 +49,9 @@ export default function MessegeRoom() {
 
     useEffect(() => {
         createMessegeRoom(route.params.roomid || createChatRoomId(uid, Selectuid), uid, Selectuid);
-        getDataListMesseges(setDatas, route.params.roomid || createChatRoomId(uid, Selectuid));
+        getDataListMesseges(setDatas, setMembersOnline, route.params.roomid || createChatRoomId(uid, Selectuid));
         handlerUpdateMemberOnline(route.params.roomid || createChatRoomId(uid, Selectuid), uid, 'active');
+        handlerReadMessege(route.params.roomid || createChatRoomId(uid, Selectuid), uid);
     }, []);
 
     const backAction = () => {
@@ -71,11 +73,18 @@ export default function MessegeRoom() {
     }
 
     const renderItems = (data) => {
+        const readedData = data.item.readed;
         if (data.item.uid == uid) {
             return <View style={{ alignSelf: 'flex-end', margin: 10 }}>
                 <View style={{ backgroundColor: '#00d4ff', padding: 10, borderRadius: 10, maxWidth: '50%' }}>
                     <Text style={{ color: 'white', textAlign: 'right' }}>{data.item.messege}</Text>
-                    <Text style={{ color: '#edf0ef', fontSize: 8, textAlign: 'right' }}>{formatTimestamp(data.item.posttime)}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {readedData.includes(Selectuid)
+                        ? <Image style={{ width: 15, height: 15, marginRight: 5 }} source={require('../assets/icon/seen.png')}/>
+                        : null
+                        }
+                        <Text style={{ color: '#edf0ef', fontSize: 8, textAlign: 'right' }}>{formatTimestamp(data.item.posttime)}</Text>
+                    </View>
                 </View>
             </View>
         }
@@ -83,16 +92,24 @@ export default function MessegeRoom() {
             return <View style={{ alignSelf: 'flex-start', margin: 10 }}>
                 <View style={{ backgroundColor: '#edf0ef', padding: 10, borderRadius: 10, maxWidth: '50%' }}>
                     <Text>{data.item.messege}</Text>
-                    <Text style={{ color: 'grey', fontSize: 8}}>{formatTimestamp(data.item.posttime)}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={{ color: 'grey', fontSize: 8}}>{formatTimestamp(data.item.posttime)}</Text>
+                    </View>
                 </View>
             </View>
         }
     }
 
     const buttonPress = () => {
-        handlerMessege(route.params.roomid || createChatRoomId(uid, Selectuid), uid, input, 'Text');
+        handlerMessege(route.params.roomid || createChatRoomId(uid, Selectuid), uid, input, 'Text', membersOnline);
         setInput('');
         Keyboard.dismiss();
+    }
+
+    const backHandler = () => {
+        handlerUpdateMemberOnline(route.params.roomid || createChatRoomId(uid, Selectuid), uid, 'background');
+        console.log('User not in room');
+        navigation.goBack();
     }
 
     return (
@@ -119,7 +136,7 @@ export default function MessegeRoom() {
                         </View>
                     </View>
                     <View>
-                        <TouchableOpacity onPress={() => { navigation.goBack() }}>
+                        <TouchableOpacity onPress={() => backHandler()}>
                             <Image style={{ width: 30, height: 30 }} source={require('../assets/icon/back.png')} />
                         </TouchableOpacity>
                     </View>

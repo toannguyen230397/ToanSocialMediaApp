@@ -319,7 +319,7 @@ export default function Home() {
               <Image style={styles.header_image} source={require('../assets/icon/notification.png')}></Image>
             </View>
             {notificationlength > 0
-            ? <View style={{position: 'absolute', justifyContent: 'center', alignItems: 'center', width: 20, height: 20, backgroundColor: 'red', borderRadius: 100}}>
+            ? <View style={{position: 'absolute', justifyContent: 'center', alignItems: 'center', borderColor: 'white', borderWidth: 1, width: 20, height: 20, backgroundColor: 'red', borderRadius: 100}}>
                 <Text style={{color: 'white', fontSize: 8}}>{notificationlength < 10 ? notificationlength : +10}</Text>
               </View>
             : null

@@ -18,7 +18,7 @@ export const formatTimestamp = (timestamp) => {
   if (daysDifference >= 7) {
     // Nếu hơn một tuần, hiển thị ngày tháng dạng dd-mm-yy
     const date = new Date(timestamp);
-    const formattedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear().toString().slice(-2)}`;
+    const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear().toString()}`;
     return formattedDate;
   } else if (daysDifference > 0) {
     // Hiển thị x ngày trước

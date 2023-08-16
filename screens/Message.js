@@ -51,20 +51,28 @@ export default function Message() {
               ? <Image style={{width: '100%', height: '100%', borderRadius: 100}} source={require('../assets/avatar.jpg')}/>
               : <Image style={{width: '100%', height: '100%', borderRadius: 100}} source={{uri: data.item.avatar}}/>
               }
-              {data.item.online == true
-              ? <View style={{position: 'absolute', width: 10, height: 10, borderRadius: 100, backgroundColor: '#13c40a', bottom: 0, right: 0}}></View>
+              {data.item.notRead > 0
+              ? <View style={{position: 'absolute', justifyContent: 'center', alignItems: 'center', borderColor: 'white', borderWidth: 2, width: 20, height: 20, backgroundColor: 'red', borderRadius: 100, right: -10, bottom: 0}}>
+                  <Text style={{color: 'white', fontSize: 8}}>{data.item.notRead < 10 ? data.item.notRead : +10}</Text>
+                </View>
               : null
               }
             </View>
             <View style={{ marginLeft: 10, padding: 5 }}>
-              <Text style={{ fontWeight: 'bold' }}>{data.item.name}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{ fontWeight: 'bold' }}>{data.item.name} </Text>
+                {data.item.online == true
+                ? <View style={{ width: 10, height: 10, borderRadius: 100, borderColor: 'white', borderWidth: 1, backgroundColor: '#13c40a'}}></View>
+                : <View style={{ width: 10, height: 10, borderRadius: 100, borderColor: 'white', borderWidth: 1, backgroundColor: '#edf0ef'}}></View>
+                }
+              </View>
               <View style={{ flexDirection: 'row' }}>
                 {data.item.lastmesseges.uid == uid
                 ? <Text style={{ color: '#a9abaa' }}>Bạn: </Text>
                 : null
                 }
                 <View style={{width: '70%'}}>
-                  <Text numberOfLines={1} style={{ color: '#a9abaa' }}>{data.item.lastmesseges.messege}</Text>
+                  <Text numberOfLines={1} style={{ color: data.item.notRead ? 'black' : '#a9abaa' }}>{data.item.lastmesseges.messege}</Text>
                 </View>
               </View>
             </View>
