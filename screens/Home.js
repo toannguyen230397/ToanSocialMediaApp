@@ -326,7 +326,7 @@ export default function Home() {
             }
           </TouchableOpacity>
         </LinearGradient>
-        <Newfeeds datas={datas} setDatas={setDatas} listHeader={listHeader} uid={uid} refresh={refresh} onRefresh={onRefresh} />
+        <Newfeeds datas={datas} listHeader={listHeader} uid={uid} refresh={refresh} onRefresh={onRefresh} />
         {PostModal()}
         <Toast/>
       </SafeAreaView>

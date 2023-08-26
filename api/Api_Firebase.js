@@ -163,34 +163,49 @@ export const Firebase_CreatePost = async (title, image, uid, feeling) => {
 export const getDataNewFeeds = async (setDatas, uid) => {
   const q = query(collection(firestore, "NewFeeds"));
   const querySnapshot = await getDocs(q);
-  const datas = [];
+  const postidList = [];
 
-  await Promise.all(
-    querySnapshot.docs.map(async (doc) => {
-      const data = doc.data();
-      const postby = data.postby;
-      const q2 = query(
-        collection(firestore, "Users"),
-        where("uid", "==", postby)
-      );
-      const querySnapshot2 = await getDocs(q2);
+  for (const doc of querySnapshot.docs) {
+    const data = doc.data();
+    const postid = data.postid;
+    postidList.push(postid);
+  }
 
+  if(postidList.length > 0)
+  {
+    const q2 = query(
+      collection(firestore, "NewFeeds"),
+      where("postid", "in", postidList)
+    );
+  
+    onSnapshot(q2, async (querySnapshot) => {
+      const newData = [];
       await Promise.all(
-        querySnapshot2.docs.map((doc) => {
-          const data2 = doc.data();
-          data.uid = data2.uid;
-          data.name = data2.name;
-          data.avatar = data2.avatar;
+        querySnapshot.docs.map(async (doc) => {
+          const data = doc.data();
+          const postby = data.postby;
+          const q3 = query(
+            collection(firestore, "Users"),
+            where("uid", "==", postby)
+          );
+          const querySnapshot3 = await getDocs(q3);
+  
+          const promises = querySnapshot3.docs.map((doc) => {
+            const data3 = doc.data();
+            data.uid = data3.uid;
+            data.name = data3.name;
+            data.avatar = data3.avatar;
+          });
+  
+          await Promise.all(promises);
+          newData.push(data);
+          newData.sort((a, b) => a.posttime - b.posttime);
+          newData.reverse();
         })
       );
-      datas.push(data);
-    })
-  );
-
-  datas.sort((a, b) => a.posttime - b.posttime);
-  datas.reverse();
-  console.log('getDataNewFeeds Lấy dữ liệu Newfeeds thành công!');
-  setDatas(datas);
+      setDatas(newData);
+    });
+  }
 };
 
 /* Api này dùng để lấy dữ liệu cho bài đăng của user*/
@@ -200,33 +215,83 @@ export const getDataUserFeeds = async (setDatas, uid) => {
     where("postby", "==", uid)
   );
   const querySnapshot = await getDocs(q);
-  const datas = [];
+  const postidList = [];
 
-  await Promise.all(
-    querySnapshot.docs.map(async (doc) => {
-      const data = doc.data();
-      const q2 = query(
-        collection(firestore, "Users"),
-        where("uid", "==", uid)
-      );
-      const querySnapshot2 = await getDocs(q2);
+  for (const doc of querySnapshot.docs) {
+    const data = doc.data();
+    const postid = data.postid;
+    postidList.push(postid);
+  }
 
+  if(postidList.length > 0)
+  {
+    const q2 = query(
+      collection(firestore, "NewFeeds"),
+      where("postid", "in", postidList)
+    );
+  
+    onSnapshot(q2, async (querySnapshot) => {
+      const newData = [];
       await Promise.all(
-        querySnapshot2.docs.map((doc) => {
+        querySnapshot.docs.map(async (doc) => {
+          const data = doc.data();
+          const postby = data.postby;
+          const q3 = query(
+            collection(firestore, "Users"),
+            where("uid", "==", postby)
+          );
+          const querySnapshot3 = await getDocs(q3);
+  
+          const promises = querySnapshot3.docs.map((doc) => {
+            const data3 = doc.data();
+            data.uid = data3.uid;
+            data.name = data3.name;
+            data.avatar = data3.avatar;
+          });
+  
+          await Promise.all(promises);
+          newData.push(data);
+          newData.sort((a, b) => a.posttime - b.posttime);
+          newData.reverse();
+        })
+      );
+      setDatas(newData);
+    });
+  }
+};
+
+/* Api này dùng để lấy dữ liệu cho bài viết*/
+export const getDataDetaiFeed = async (setDatas, postid) => {
+  const q = query(
+    collection(firestore, "NewFeeds"),
+    where("postid", "==", postid)
+  );
+  
+  onSnapshot(q, async (querySnapshot) => {
+    const newData = [];
+    await Promise.all(
+      querySnapshot.docs.map(async (doc) => {
+        const data = doc.data();
+        const postby = data.postby;
+        const q2 = query(
+          collection(firestore, "Users"),
+          where("uid", "==", postby)
+        );
+        const querySnapshot2 = await getDocs(q2);
+  
+        const promises = querySnapshot2.docs.map((doc) => {
           const data2 = doc.data();
           data.uid = data2.uid;
           data.name = data2.name;
           data.avatar = data2.avatar;
-        })
-      );
-      datas.push(data);
-    })
-  );
-
-  datas.sort((a, b) => a.posttime - b.posttime);
-  datas.reverse();
-  console.log('getDataUserFeeds lấy dữ liệu Newfeeds của user thành công!');
-  setDatas(datas);
+        });
+  
+        await Promise.all(promises);
+        newData.push(data);
+      })
+    );
+    setDatas(newData);
+  });
 };
 
 /* Api này dùng để lấy dữ liệu album của user*/
@@ -366,8 +431,7 @@ export const getDataFriendlist = async (setDatas, uid) => {
     const fielddata = data.friendlist;
     friendlist.push(...fielddata);
   });
-  if(friendlist.length > 0)
-  {
+  if (friendlist.length > 0) {
     const q2 = query(
       collection(firestore, "Users"),
       where("uid", "in", friendlist)
@@ -629,8 +693,7 @@ export const handlerReadNotification = async (uid) => {
 
 /* Api này dùng kiểm tra mỗi quan hệ*/
 export const checkFriendship = async (uid1, uid2, setStatus) => {
-  if(uid1 != uid2)
-  {
+  if (uid1 != uid2) {
     const q = query(
       collection(firestore, "Users"),
       where("uid", "==", uid1)
@@ -648,8 +711,7 @@ export const checkFriendship = async (uid1, uid2, setStatus) => {
         onSnapshot(q2, (querySnapshot2) => {
           querySnapshot2.forEach((doc2) => {
             const userData2 = doc2.data();
-            if (userData.waiting.includes(uid2))
-            {
+            if (userData.waiting.includes(uid2)) {
               setStatus('Đang chờ phản hồi từ bạn');
             }
             else if (userData2.friendlist.includes(uid1)) {
@@ -667,60 +729,57 @@ export const checkFriendship = async (uid1, uid2, setStatus) => {
   }
 }
 
-/* Api này dùng để lấy dữ liệu cho bài viết*/
-export const getDataDetaiFeed = async (setDatas, setImages, setLoading, postid) => {
-  const q = query(
-    collection(firestore, "NewFeeds"),
-    where("postid", "==", postid)
-    );
-  const querySnapshot = await getDocs(q);
-  const datas = [];
+// /* Api này dùng để lấy dữ liệu cho bài viết*/
+// export const getDataDetaiFeed = async (setDatas, setImages, setLoading, postid) => {
+//   const q = query(
+//     collection(firestore, "NewFeeds"),
+//     where("postid", "==", postid)
+//   );
+//   const querySnapshot = await getDocs(q);
+//   const datas = [];
 
-  await Promise.all(
-    querySnapshot.docs.map(async (doc) => {
-      const data = doc.data();
-      const postby = data.postby;
-      setImages(data.image);
-      const q2 = query(
-        collection(firestore, "Users"),
-        where("uid", "==", postby)
-      );
-      const querySnapshot2 = await getDocs(q2);
+//   await Promise.all(
+//     querySnapshot.docs.map(async (doc) => {
+//       const data = doc.data();
+//       const postby = data.postby;
+//       setImages(data.image);
+//       const q2 = query(
+//         collection(firestore, "Users"),
+//         where("uid", "==", postby)
+//       );
+//       const querySnapshot2 = await getDocs(q2);
 
-      await Promise.all(
-        querySnapshot2.docs.map((doc) => {
-          const data2 = doc.data();
-          data.uid = data2.uid;
-          data.name = data2.name;
-          data.avatar = data2.avatar;
-        })
-      );
-      datas.push(data);
-    })
-  );
-  console.log('getDataDetaiFeed Lấy dữ liệu bài viết thành công!');
-  setDatas(datas);
-  setLoading(false);
-};
+//       await Promise.all(
+//         querySnapshot2.docs.map((doc) => {
+//           const data2 = doc.data();
+//           data.uid = data2.uid;
+//           data.name = data2.name;
+//           data.avatar = data2.avatar;
+//         })
+//       );
+//       datas.push(data);
+//     })
+//   );
+//   console.log('getDataDetaiFeed Lấy dữ liệu bài viết thành công!');
+//   setDatas(datas);
+//   setLoading(false);
+// };
 
 /* Api này dùng để gửi yêu cầu kết bạn*/
 export const handlerFriendRequest = async (status, uid, uid2) => {
   const docRef = doc(firestore, "Users", uid);
-  const postid = uid2+'-'+uid;
-  if(status == 'Gửi lời kết bạn')
-  {
+  const postid = uid2 + '-' + uid;
+  if (status == 'Gửi lời kết bạn') {
     await updateDoc(docRef, { waiting: arrayUnion(uid2) });
     handlerNotification(uid2, uid, 'Đã gửi lời mời kết bạn', postid, 'friendRequest');
     console.log('send request success');
   }
-  else if(status == 'Đã gửi lời mời kết bạn')
-  {
+  else if (status == 'Đã gửi lời mời kết bạn') {
     await updateDoc(docRef, { waiting: arrayRemove(uid2) });
     handlerRemoveNotification(uid, postid);
     console.log('remove request success');
   }
-  else
-  {
+  else {
     null;
   }
 }
@@ -731,22 +790,20 @@ export const responeFriendRequest = async (response, uid, uid2, uid2Name, postid
   const docRef = doc(firestore, "Users", uid);
   const docRef2 = doc(firestore, "Users", uid2);
   const timestamp = Date.now();
-  const newPostid = uid+'-'+timestamp;
+  const newPostid = uid + '-' + timestamp;
   handlerRemoveNotification(uid, postid);
-  if(response == 'argee')
-  {
+  if (response == 'argee') {
     await updateDoc(docRef, { friendlist: arrayUnion(uid2), waiting: arrayRemove(uid2) });
     await updateDoc(docRef2, { friendlist: arrayUnion(uid) });
     handlerNotification(uid, uid2, 'Đã đồng ý lời mời kết bạn của bạn', newPostid, 'responeRequest');
     setIsLoading(false);
-    ShowToast('success', 'Thông Báo', 'Bạn đã trở thành bạn bè của '+uid2Name);
+    ShowToast('success', 'Thông Báo', 'Bạn đã trở thành bạn bè của ' + uid2Name);
   }
-  else
-  {
+  else {
     await updateDoc(docRef, { waiting: arrayRemove(uid2) });
     handlerNotification(uid, uid2, 'Đã từ chối lời mời kết bạn của bạn', newPostid, 'responeRequest');
     setIsLoading(false);
-    ShowToast('error', 'Thông Báo', 'Bạn đã từ chối lời kết bạn của '+uid2Name);
+    ShowToast('error', 'Thông Báo', 'Bạn đã từ chối lời kết bạn của ' + uid2Name);
   }
 }
 
@@ -755,7 +812,7 @@ export const handlerUnfriend = async (uid, uid2, setLoading) => {
   setLoading(true);
   const docRef = doc(firestore, "Users", uid);
   const docRef2 = doc(firestore, "Users", uid2);
-  
+
   await updateDoc(docRef, { friendlist: arrayRemove(uid2) });
   await updateDoc(docRef2, { friendlist: arrayRemove(uid) });
   ShowToast('success', 'Thông Báo', 'Hủy kết bạn thành công!');
@@ -776,15 +833,13 @@ export const sendNotificationToFriendlist = async (uid, title, PostID) => {
     friendlist.push(...fielddata);
   });
 
-  if(friendlist.length > 0)
-  {
+  if (friendlist.length > 0) {
     for (let i = 0; i < friendlist.length; i++) {
       const timestamp = Date.now();
-      handlerNotification(uid, friendlist[i], 'đã đăng một bài viết mới: '+title, PostID, 'post');
+      handlerNotification(uid, friendlist[i], 'đã đăng một bài viết mới: ' + title, PostID, 'post');
     }
   }
-  else
-  {
+  else {
     console.log('Không có bạn bè');
   }
 };
@@ -792,8 +847,7 @@ export const sendNotificationToFriendlist = async (uid, title, PostID) => {
 /* Api này dùng để cập nhật trạng thái online và offline của user*/
 export const handlerOnline = async (state) => {
   const storedUid = await AsyncStorage.getItem('uid');
-  if(storedUid)
-  {
+  if (storedUid) {
     const docRef = doc(firestore, "Users", storedUid);
     await updateDoc(docRef, {
       online: state == 'active' ? true : false,
@@ -808,14 +862,12 @@ export const handlerUpdateMemberOnline = async (roomid, uid, state) => {
   const docRef = doc(firestore, "Messege", roomid);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
-    if(state == 'active')
-    {
+    if (state == 'active') {
       await updateDoc(docRef, {
         online: arrayUnion(uid)
       });
     }
-    else
-    {
+    else {
       await updateDoc(docRef, {
         online: arrayRemove(uid)
       });
@@ -830,7 +882,7 @@ export const handlerReadMessege = async (roomid, uid) => {
   const docSnapshot = await getDoc(docRef);
 
   if (docSnapshot.exists()) {
-    const messeges = docSnapshot.data().messeges; 
+    const messeges = docSnapshot.data().messeges;
 
     const updatedMesseges = messeges.map((messege) => {
       if (!messege.readed) {

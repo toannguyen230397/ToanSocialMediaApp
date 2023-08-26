@@ -159,7 +159,7 @@ export default function Userprofile({Selectuid, Selectname, Selectavatar}) {
           lefticon={require('../assets/icon/back.png')}
           lefticonpress={navigation.goBack}
         />
-        <Newfeeds datas={datas} setDatas={setDatas} listHeader={listHeader} uid={route.params.Selectuid} refresh={refresh} onRefresh={onRefresh}/>
+        <Newfeeds datas={datas} listHeader={listHeader} uid={uid} refresh={refresh} onRefresh={onRefresh}/>
         {VerifyModal()}
         <Toast/>
       </View>

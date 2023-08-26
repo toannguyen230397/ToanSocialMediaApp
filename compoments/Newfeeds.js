@@ -6,7 +6,7 @@ import NewfeedsTop from './NewfeedsTop'
 import { useNavigation } from '@react-navigation/native'
 import { handlerLike, handlerNoLike, handlerNotification } from '../api/Api_Firebase'
 
-export default function Newfeeds({datas, setDatas, listHeader, uid, refresh, onRefresh}) {
+export default function Newfeeds({datas, listHeader, uid, refresh, onRefresh}) {
     const navigation = useNavigation();
 
     const ListEmpty  = () => (
@@ -32,11 +32,8 @@ export default function Newfeeds({datas, setDatas, listHeader, uid, refresh, onR
           const like = [...item.like];
   
           if (like.includes(uid)) {
-            const updatedLike = like.filter((id) => id !== uid);
-            item.like = updatedLike;
             handlerNoLike(postid, uid);
           } else {
-            item.like.push(uid);
             handlerLike(postid, uid);
             if(selectedUid != uid)
             {
@@ -44,10 +41,7 @@ export default function Newfeeds({datas, setDatas, listHeader, uid, refresh, onR
             }
           }
         }
-        return item;
       });
-  
-      setDatas(newData);
     };
 
     const renderNewFeeds = (data) => {
@@ -62,7 +56,7 @@ export default function Newfeeds({datas, setDatas, listHeader, uid, refresh, onR
             <FbGrid
               images={data.item.image}
               onPress={(url, index, event) => {
-                navigation.navigate('DetailImage', {images: data.item.image, index: index});
+                navigation.navigate('DetailImage', {images: data.item.image, index: index, postid: data.item.postid});
               }}      
             />    
           </View>
